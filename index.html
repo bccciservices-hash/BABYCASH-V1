@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BCC FUTURE</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --bg:#0e1116;
+  --card:#1a1f26;
+  --card-light:#222933;
+  --text:#ffffff;
+  --text-dim:#8a94a3;
+  --accent:#ff8c00;
+  --disabled:#2c333b;
+}
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
+body{background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+.hidden{display:none!important;}
+section{min-height:100vh;width:100%;}
+
+/* Splash */
+#splash{display:flex;align-items:center;justify-content:center;background:var(--bg);}
+#splash img{width:140px;animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.6}}
+
+/* Maintenance */
+#maintenance{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px;}
+#maintenance img{width:120px;margin-bottom:20px;}
+#maintenance h2{font-size:22px;margin-bottom:10px;}
+#maintenance p{color:var(--text-dim);font-size:15px;}
+
+/* Onboarding */
+#onboarding{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;text-align:center;}
+#onboarding img{width:100%;max-width:320px;border-radius:20px;margin-bottom:30px;}
+#onboarding h1{font-size:24px;margin-bottom:10px;}
+#onboarding p{color:var(--text-dim);margin-bottom:30px;}
+.btn-primary{background:var(--accent);color:#000;border:none;padding:14px 30px;border-radius:12px;font-weight:600;font-size:16px;width:100%;max-width:320px;}
+.btn-primary:disabled{background:var(--disabled);color:var(--text-dim);}
+
+/* Auth */
+#auth{padding:30px 20px;}
+.auth-tabs{display:flex;margin-bottom:20px;border-bottom:1px solid #2c333b;}
+.auth-tab{flex:1;padding:12px;text-align:center;color:var(--text-dim);}
+.auth-tab.active{color:var(--text);border-bottom:2px solid var(--accent);}
+.form-group{margin-bottom:16px;}
+.form-group input{width:100%;padding:14px;background:var(--card);border:1px solid #2c333b;border-radius:10px;color:var(--text);font-size:15px;}
+.form-group input:focus{outline:none;border-color:var(--accent);}
+
+/* Home User */
+#home-user{padding-bottom:90px;background:var(--bg);}
+.home-header{padding:20px 20px 10px;display:flex;justify-content:space-between;align-items:center;}
+.home-header.greet{font-size:14px;color:var(--text-dim);}
+.home-header.name{font-size:20px;font-weight:700;margin-top:2px;}
+.home-header.logo{width:32px;height:32px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#000;}
+
+.balance-card{
+  background:linear-gradient(135deg,#ff8c00,#ff6a00);
+  margin:0 20px;
+  padding:24px 20px;
+  border-radius:20px;
+  color:#000;
+}
+.balance-card.label{font-size:14px;opacity:0.8;margin-bottom:6px;}
+.balance-card.amount{font-size:36px;font-weight:800;margin-bottom:8px;}
+.balance-card.estimate{font-size:14px;opacity:0.8;}
+
+.actions-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+  padding:20px;
+}
+.action-btn{
+  background:var(--card);
+  border-radius:16px;
+  padding:18px 16px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  transition:0.2s;
+}
+.action-btn:active{transform:scale(0.98);}
+.action-btn.disabled{opacity:0.4;pointer-events:none;}
+.action-icon{
+  width:40px;height:40px;
+  background:var(--card-light);
+  border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;
+}
+.action-text{display:flex;flex-direction:column;}
+.action-title{font-size:15px;font-weight:600;}
+.action-sub{font-size:12px;color:var(--text-dim);margin-top:2px;}
+
+.history-section{padding:0 20px;margin-top:10px;}
+.history-title{font-size:16px;font-weight:600;margin-bottom:12px;}
+  .history-empty{
+  background:var(--card);
+  border-radius:16px;
+  padding:40px 20px;
+  text-align:center;
+  color:var(--text-dim);
+  font-size:14px;
+}
+
+/* Navbar */
+.navbar{
+  position:fixed;
+  bottom:0;left:0;right:0;
+  background:var(--card);
+  display:flex;
+  justify-content:space-around;
+  padding:8px 0 20px;
+  border-top:1px solid #2c333b;
+}
+.nav-item{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:4px;
+  color:var(--text-dim);
+  font-size:11px;
+  flex:1;
+}
+.nav-item.active{color:var(--accent);}
+.nav-icon{font-size:22px;}
+
+/* Dashboard Admin */
+#dashboard-admin{padding:20px;padding-bottom:80px;}
+.admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.admin-card{background:var(--card);padding:16px;border-radius:12px;}
+.admin-card.disabled{opacity:0.4;pointer-events:none;}
+.admin-card h4{font-size:15px;margin-bottom:5px;}
+.admin-card p{font-size:12px;color:var(--text-dim);}
+.maintenance-toggle{margin:20px 0;padding:16px;background:var(--card);border-radius:12px;}
+</style>
+</head>
+<body>
+
+<!-- 1. SPLASH -->
+<section id="splash">
+  <img src="splash_logo.png" alt="logo">
+</section>
+
+<!-- 2. MAINTENANCE -->
+<section id="maintenance" class="hidden">
+  <img src="splash_logo.png" alt="logo">
+  <h2>Maintenance en cours</h2>
+  <p id="maintenance-msg">On revient vite avec des améliorations</p>
+</section>
+
+<!-- 3. ONBOARDING -->
+<section id="onboarding" class="hidden">
+  <img src="onboarding_BG.png" alt="onboarding">
+  <h1>Bienvenue sur BCC FUTURE</h1>
+  <p>Gagnez, échangez et gérez vos BCC en toute simplicité</p>
+  <button class="btn-primary" onclick="showSection('auth')">Commencer</button>
+</section>
+
+<!-- 4. AUTH -->
+<section id="auth" class="hidden">
+  <div class="auth-tabs">
+    <div class="auth-tab active" onclick="switchTab('login', this)">Connexion</div>
+    <div class="auth-tab" onclick="switchTab('register', this)">Inscription</div>
+  </div>
+
+  <div id="login-tab">
+    <div class="form-group"><input type="email" id="login-email" placeholder="Email"></div>
+    <div class="form-group"><input type="password" id="login-password" placeholder="Mot de passe"></div>
+    <button class="btn-primary" onclick="login()">Se connecter</button>
+  </div>
+
+  <div id="register-tab" class="hidden">
+    <div class="form-group"><input type="text" id="reg-nom" placeholder="Nom"></div>
+    <div class="form-group"><input type="text" id="reg-prenom" placeholder="Prénom"></div>
+    <div class="form-group"><input type="email" id="reg-email" placeholder="Email"></div>
+    <div class="form-group"><input type="password" id="reg-password" placeholder="Mot de passe"></div>
+    <button class="btn-primary" onclick="register()">Créer mon compte</button>
+  </div>
+</section>
+
+<!-- 5. ACCUEIL USER -->
+<section id="home-user" class="hidden">
+  <div class="home-header">
+    <div>
+      <div class="greet">Bonjour</div>
+      <div class="name" id="user-name">User</div>
+    </div>
+    <div class="logo">B</div>
+  </div>
+
+  <div class="balance-card">
+    <div class="label">Solde principal</div>
+     <div class="amount" id="balance">0 BCC</div>
+    <div class="estimate">≈ 0 CFA</div>
+  </div>
+
+  <div class="actions-grid">
+    <div class="action-btn" id="btn-envoyer">
+      <div class="action-icon">📤</div>
+      <div class="action-text">
+        <div class="action-title">Envoyer</div>
+        <div class="action-sub">Transférer BCC</div>
+      </div>
+    </div>
+    <div class="action-btn" id="btn-recevoir">
+      <div class="action-icon">📥</div>
+      <div class="action-text">
+        <div class="action-title">Recevoir</div>
+        <div class="action-sub">Recevoir BCC</div>
+      </div>
+    </div>
+    <div class="action-btn" id="btn-scanner">
+      <div class="action-icon">📷</div>
+      <div class="action-text">
+        <div class="action-title">Scanner</div>
+        <div class="action-sub">QR Code</div>
+      </div>
+    </div>
+    <div class="action-btn" id="btn-convertir">
+      <div class="action-icon">🔄</div>
+      <div class="action-text">
+        <div class="action-title">Convertir</div>
+        <div class="action-sub">BCC ↔️ CFA</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="history-section">
+    <div class="history-title">Historique</div>
+    <div class="history-empty">Aucune transaction pour le moment</div>
+  </div>
+
+  <div class="navbar">
+    <div class="nav-item active">
+      <div class="nav-icon">🏠</div>
+      <div>Accueil</div>
+    </div>
+    <div class="nav-item">
+      <div class="nav-icon">🎁</div>
+      <div>Récompense</div>
+    </div>
+    <div class="nav-item">
+      <div class="nav-icon">👋</div>
+      <div>Bienvenue</div>
+    </div>
+    <div class="nav-item">
+      <div class="nav-icon">🛒</div>
+      <div>Marché</div>
+    </div>
+    <div class="nav-item" onclick="showSection('profil')">
+      <div class="nav-icon">👤</div>
+      <div>Profil</div>
+    </div>
+  </div>
+</section>
+
+<!-- 6. DASHBOARD ADMIN -->
+<section id="dashboard-admin" class="hidden">
+  <div class="home-header">
+    <div>
+      <div class="greet">Dashboard</div>
+      <div class="name" id="admin-role">Admin</div>
+    </div>
+    <button class="btn-primary" style="width:auto;padding:8px 16px;" onclick="logout()">Déco</button>
+  </div>
+
+  <div class="maintenance-toggle hidden" id="super-admin-panel">
+    <label><input type="checkbox" id="maintenance-switch" onchange="toggleMaintenance()"> Mode Maintenance</label>
+  </div>
+
+  <div class="admin-grid" id="admin-actions"></div>
+</section>
+
+<!-- 7. PROFIL -->
+<section id="profil" class="hidden">
+  <div class="home-header">
+    <div class="name">Profil</div>
+    <button class="btn-primary" style="width:auto;padding:8px 16px;" onclick="showSection('home-user')">Retour</button>
+  </div>
+  <div style="padding:20px;">
+    <button class="btn-primary" onclick="changePassword()">Changer mot de passe</button>
+    <button class="btn-primary" style="margin-top:10px;background:#d32f2f" onclick="logout()">Déconnexion</button>
+  </div>
+</section>
+
+<script>
+const SUPABASE_URL = 'TON_URL_SUPABASE';
+const SUPABASE_KEY = 'TA_CLE_SUPABASE';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  let currentUser = null;
+let userRole = null;
+
+const sections = ['splash','maintenance','onboarding','auth','home-user','dashboard-admin','profil'];
+function showSection(id){
+  sections.forEach(s=>document.getElementById(s).classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+}
+
+function switchTab(tab, el){
+  document.querySelectorAll('.auth-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('login-tab').classList.add('hidden');
+  document.getElementById('register-tab').classList.add('hidden');
+  document.getElementById(tab+'-tab').classList.remove('hidden');
+  el.classList.add('active');
+}
+
+window.onload = async () => {
+  setTimeout(async ()=>{
+    const { data:{session} } = await supabase.auth.getSession();
+    const { data: settings } = await supabase.from('app_settings').select('*').single();
+
+    if(settings?.maintenance_mode){
+      const { data: {user} } = await supabase.auth.getUser();
+      if(user){
+        const { data: profile } = await supabase.from('users').select('role').eq('id',user.id).single();
+        if(!profile?.role ||!profile.role.includes('admin')){
+          showSection('maintenance');
+          return;
+        }
+      }else{
+        showSection('maintenance');
+        return;
+      }
+    }
+
+    if(session){
+      currentUser = session.user;
+      const { data: profile } = await supabase.from('users').select('role,prenom').eq('id',session.user.id).single();
+      userRole = profile?.role;
+
+      if(userRole && userRole.includes('admin')){
+        loadAdminDashboard(userRole);
+        showSection('dashboard-admin');
+      }else{
+        document.getElementById('user-name').textContent = profile?.prenom || 'User';
+        showSection('home-user');
+      }
+    }else{
+      showSection('onboarding');
+    }
+  },2000);
+};
+
+async function login(){
+  const email = document.getElementById('login-email').value;
+  const password = document.getElementById('login-password').value;
+  const { data, error } = await supabase.auth.signInWithPassword({email,password});
+  if(error){alert(error.message);return;}
+  location.reload();
+}
+
+async function register(){
+  const email = document.getElementById('reg-email').value;
+  const password = document.getElementById('reg-password').value;
+  const nom = document.getElementById('reg-nom').value;
+  const prenom = document.getElementById('reg-prenom').value;
+  const { data, error } = await supabase.auth.signUp({
+    email,password,
+    options:{data:{nom,prenom}}
+  });
+  if(error){alert(error.message);return;}
+  alert('Compte créé. Vérifiez votre email.');
+}
+
+async function logout(){
+  await supabase.auth.signOut();
+  location.reload();
+}
+
+function loadAdminDashboard(role){
+  document.getElementById('admin-role').textContent = role;
+
+  if(role==='super_admin') document.getElementById('super-admin-panel').classList.remove('hidden');
+
+  const actions = [
+    {id:'create_campaign',label:'Créer campagne',desc:'Scratch campaign'},
+    {id:'set_budget',label:'Set budget/jour',desc:'Budget quotidien'},
+     {id:'validate_mission',label:'Valider missions',desc:'Approuver missions'},
+    {id:'approve_kyc',label:'Approuver KYC',desc:'Vérifier identités'},
+    {id:'mark_paid',label:'Marquer retrait payé',desc:'Confirmer paiements'},
+    {id:'block_user',label:'Bloquer compte',desc:'Suspendre user'},
+    {id:'view_logs',label:'Voir logs',desc:'Historique actions'}
+  ];
+
+  const allowed = getAllowedActions(role);
+  const container = document.getElementById('admin-actions');
+  container.innerHTML = actions.map(a=>{
+    const disabled =!allowed.includes(a.id)? 'disabled' : '';
+    return `<div class="admin-card ${disabled}" title="${disabled?'Action non autorisée pour votre rôle':''}">
+      <h4>${a.label}</h4><p>${a.desc}</p>
+    </div>`;
+  }).join('');
+}
+
+function getAllowedActions(role){
+  const perms = {
+    super_admin:['create_campaign','set_budget','validate_mission','approve_kyc','mark_paid','block_user','view_logs'],
+    manager_kyc:['validate_mission','approve_kyc','mark_paid'],
+    manager_support:['block_user','view_logs'],
+    moderator_a:['validate_mission'],
+    moderator_b:['validate_mission']
+  };
+  return perms[role]||[];
+}
+
+async function toggleMaintenance(){
+  const checked = document.getElementById('maintenance-switch').checked;
+  await supabase.from('app_settings').update({maintenance_mode:checked}).eq('id',1);
+  alert('Mode maintenance '+ (checked?'activé':'désactivé'));
+}
+
+async function changePassword(){
+  const newPass = prompt('Nouveau mot de passe:');
+  if(newPass) await supabase.auth.updateUser({password:newPass});
+}
+
+supabase.from('app_settings').select('maintenance_mode').single().then(({data})=>{
+  if(data?.maintenance_mode){
+    document.querySelectorAll('.action-btn').forEach(b=>b.classList.add('disabled'));
+  }
+});
+</script>
+</body>
+</html>
